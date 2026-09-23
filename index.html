@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#05080b">
+<title>=BIA= Pirate Week 2956</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#020406}
+body{
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  font-family:Arial,Helvetica,sans-serif;
+  overflow-x:hidden;
+}
+.poster{
+  position:relative;
+  width:min(100vw,1536px);
+  aspect-ratio:1536/1024;
+  background:url("pirate-week-poster.png") center/100% 100% no-repeat;
+  overflow:hidden;
+}
+
+/* Overlay interattivo SOLO sulla fascia dorata della locandina */
+.scratch{
+  position:absolute;
+  left:27.9%;
+  top:44.55%;
+  width:44.2%;
+  height:14.0%;
+  overflow:hidden;
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+/* Il codice reale compare sotto la patina */
+.secret{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,rgba(8,24,27,.96),rgba(5,14,18,.98));
+  color:#effff9;
+  border-radius:1.2vw;
+}
+#code{
+  font-family:Consolas,"Courier New",monospace;
+  font-weight:900;
+  font-size:clamp(9px,1.42vw,22px);
+  letter-spacing:.02em;
+  text-align:center;
+  padding:0 2%;
+  text-shadow:0 0 10px rgba(94,255,210,.25);
+}
+#cover{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  touch-action:none;
+  cursor:crosshair;
+}
+
+/* Pulsante copia: coincide con il pulsante blu già disegnato nella locandina */
+#copy{
+  position:absolute;
+  left:25.9%;
+  top:72.35%;
+  width:23.4%;
+  height:7.3%;
+  border:0;
+  background:transparent;
+  color:transparent;
+  cursor:pointer;
+  display:none;
+}
+
+/* Link RSI: coincide con il pulsante rosso già presente nella locandina */
+.rsi{
+  position:absolute;
+  left:50.65%;
+  top:72.35%;
+  width:23.3%;
+  height:7.3%;
+  display:block;
+  background:transparent;
+  border:0;
+  cursor:pointer;
+}
+
+/* Feedback discreto senza coprire la grafica */
+.toast{
+  position:absolute;
+  left:50%;
+  top:69.2%;
+  transform:translateX(-50%);
+  padding:.45em .9em;
+  border-radius:999px;
+  background:rgba(3,10,14,.90);
+  border:1px solid rgba(126,175,192,.65);
+  color:#dcecf2;
+  font-size:clamp(8px,.85vw,13px);
+  font-weight:700;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s;
+  white-space:nowrap;
+}
+.toast.show{opacity:1}
+
+@media(max-width:700px){
+  body{min-height:100vh;align-items:flex-start}
+  .poster{
+    width:100vw;
+    min-width:100vw;
+  }
+  #code{font-size:clamp(7px,1.5vw,12px)}
+}
+</style>
+</head>
+<body>
+
+<main class="poster" id="poster" aria-label="=BIA= Pirate Week 2956 Treasure Hunt">
+
+  <div class="scratch" id="scratch">
+    <div class="secret">
+      <div id="code"></div>
+    </div>
+    <canvas id="cover"></canvas>
+  </div>
+
+  <button id="copy" type="button" aria-label="Copia codice"></button>
+
+  <a class="rsi"
+     href="https://robertsspaceindustries.com/en/comm-link/transmission/21285-Pirate-Week-2026"
+     target="_blank"
+     rel="noopener"
+     aria-label="Apri Pirate Week sul sito RSI"></a>
+
+  <div class="toast" id="toast">✓ CODICE COPIATO</div>
+</main>
+
+<script>
+(() => {
+  const canvas = document.getElementById("cover");
+  const box = document.getElementById("scratch");
+  const ctx = canvas.getContext("2d", {willReadFrequently:true});
+  const codeEl = document.getElementById("code");
+  const copyBtn = document.getElementById("copy");
+  const toast = document.getElementById("toast");
+
+  /* Codice non presente in chiaro nel markup HTML */
+  const packed = [
+    55,45,65,81,52,50,45,48,56,50,57,45,52,53,54,55,45,
+    49,53,45,82,68,70,69,52,53,56,55,45,51,50,52,45,76,54
+  ];
+  const getCode = () => packed.map(n => String.fromCharCode(n)).join("");
+
+  let active = false;
+  let last = null;
+  let done = false;
+  let counter = 0;
+
+  function paintCover() {
+    const r = box.getBoundingClientRect();
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+
+    canvas.width = Math.round(r.width * dpr);
+    canvas.height = Math.round(r.height * dpr);
+    canvas.style.width = r.width + "px";
+    canvas.style.height = r.height + "px";
+
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.globalCompositeOperation = "source-over";
+
+    /* Patina dorata coordinata con quella stampata nella locandina */
+    const g = ctx.createLinearGradient(0,0,r.width,r.height);
+    g.addColorStop(0,"#8f6727");
+    g.addColorStop(.16,"#d8a948");
+    g.addColorStop(.36,"#f0ca70");
+    g.addColorStop(.58,"#a97b2f");
+    g.addColorStop(.78,"#e1b24f");
+    g.addColorStop(1,"#8c6426");
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,r.width,r.height);
+
+    /* Graffi */
+    ctx.strokeStyle = "rgba(65,39,8,.28)";
+    ctx.lineWidth = 1;
+    for(let i=0;i<85;i++){
+      const x=(i*79)%r.width;
+      const y=(i*31)%r.height;
+      ctx.beginPath();
+      ctx.moveTo(x,y);
+      ctx.lineTo(Math.min(r.width,x+r.width*.11),Math.max(0,y-r.height*.12));
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = "rgba(38,24,5,.78)";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `700 ${Math.max(9,r.width*.023)}px Arial`;
+    ctx.fillText("☠  GRATTA PER RIVELARE  ☠", r.width/2, r.height/2);
+  }
+
+  function point(x,y){
+    const r=canvas.getBoundingClientRect();
+    return {x:x-r.left,y:y-r.top};
+  }
+
+  function erase(p){
+    ctx.globalCompositeOperation="destination-out";
+    ctx.lineCap="round";
+    ctx.lineJoin="round";
+    ctx.lineWidth=Math.max(20,box.clientWidth*.075);
+
+    if(last){
+      ctx.beginPath();
+      ctx.moveTo(last.x,last.y);
+      ctx.lineTo(p.x,p.y);
+      ctx.stroke();
+    }else{
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,Math.max(10,box.clientWidth*.038),0,Math.PI*2);
+      ctx.fill();
+    }
+    last=p;
+    if(++counter%7===0) measure();
+  }
+
+  function measure(){
+    if(done) return;
+
+    const data=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+    let clear=0,total=0;
+
+    for(let i=3;i<data.length;i+=240){
+      total++;
+      if(data[i]<40) clear++;
+    }
+
+    const pct=Math.round(clear/total*100);
+    if(pct>=55) reveal();
+  }
+
+  function reveal(){
+    if(done) return;
+    done=true;
+    codeEl.textContent=getCode();
+
+    canvas.style.transition="opacity .45s";
+    canvas.style.opacity="0";
+    canvas.style.pointerEvents="none";
+
+    copyBtn.style.display="block";
+  }
+
+  function start(x,y){
+    active=true;
+    last=null;
+    erase(point(x,y));
+  }
+
+  function move(x,y){
+    if(active&&!done) erase(point(x,y));
+  }
+
+  function end(){
+    if(active){
+      active=false;
+      last=null;
+      measure();
+    }
+  }
+
+  /* Mouse */
+  canvas.addEventListener("mousedown",e=>{
+    e.preventDefault();
+    start(e.clientX,e.clientY);
+  });
+
+  window.addEventListener("mousemove",e=>{
+    if(active){
+      e.preventDefault();
+      move(e.clientX,e.clientY);
+    }
+  });
+
+  window.addEventListener("mouseup",end);
+
+  /* Touch iPhone / Android */
+  canvas.addEventListener("touchstart",e=>{
+    e.preventDefault();
+    const t=e.touches[0];
+    if(t) start(t.clientX,t.clientY);
+  },{passive:false});
+
+  canvas.addEventListener("touchmove",e=>{
+    e.preventDefault();
+    const t=e.touches[0];
+    if(t) move(t.clientX,t.clientY);
+  },{passive:false});
+
+  canvas.addEventListener("touchend",e=>{
+    e.preventDefault();
+    end();
+  },{passive:false});
+
+  copyBtn.addEventListener("click",async()=>{
+    const value=getCode();
+
+    try{
+      await navigator.clipboard.writeText(value);
+    }catch(e){
+      const ta=document.createElement("textarea");
+      ta.value=value;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+    }
+
+    toast.classList.add("show");
+    setTimeout(()=>toast.classList.remove("show"),1800);
+  });
+
+  paintCover();
+})();
+</script>
+</body>
+</html>
