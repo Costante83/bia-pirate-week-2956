@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#05090c">
+<title>=BIA= Pirate Week 2956 — Treasure Hunt</title>
+<style>
+:root{--gold:#e6b64f;--ice:#d9e7eb;--muted:#8ca2aa;--line:#536971}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;color:var(--ice)}
+body{
+  background:#030608 url("pirate-bg.png") center top/cover fixed no-repeat;
+  padding:26px 14px;
+}
+body:before{
+  content:"";position:fixed;inset:0;z-index:-1;
+  background:linear-gradient(180deg,rgba(1,5,8,.32),rgba(1,5,8,.68) 40%,rgba(1,5,8,.82));
+}
+.card{
+  width:min(920px,100%);margin:auto;
+  background:linear-gradient(180deg,rgba(5,14,19,.90),rgba(2,8,11,.96));
+  border:1px solid rgba(120,151,160,.75);
+  border-radius:18px;overflow:hidden;
+  box-shadow:0 25px 90px #000;
+  backdrop-filter:blur(5px);
+}
+.tricolore{height:6px;background:linear-gradient(90deg,#148651 0 33.333%,#eee 33.333% 66.666%,#aa3034 66.666%)}
+.content{padding:26px 42px 34px}
+.brand{text-align:center}
+.brand img{width:145px;max-width:32vw;filter:drop-shadow(0 7px 15px #000)}
+h1{text-align:center;margin:8px 0 2px;font-size:clamp(31px,6vw,56px);line-height:1;color:#f0c45d;text-shadow:0 3px 16px #000}
+.treasure{text-align:center;letter-spacing:.36em;font-size:clamp(13px,2.3vw,20px);color:#c4d3d7;margin:8px 0 22px}
+.reward{text-align:center;border:1px solid rgba(214,167,66,.7);background:rgba(46,33,9,.75);border-radius:10px;padding:13px;margin-bottom:19px}
+.reward b{color:#f0c45d}
+.hint{text-align:center;font-size:12px;letter-spacing:.09em;margin:0 0 8px;text-shadow:0 2px 5px #000}
+.scratch{
+  position:relative;height:150px;overflow:hidden;border-radius:12px;
+  border:1px solid #a4823d;background:#061216;touch-action:none;
+  box-shadow:0 0 25px rgba(224,168,51,.12)
+}
+.secret{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;
+  background:radial-gradient(circle,#143b36 0,#061216 68%);
+}
+.secret small{color:#7f9aa1;letter-spacing:.16em;margin-bottom:10px}
+#code{font:700 clamp(14px,3vw,24px) Consolas,"Courier New",monospace;text-align:center;padding:0 10px;color:#ecfff9}
+canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+#status{text-align:center;color:#8ba1a8;font-size:12px;margin:9px 0 16px}
+.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{
+  min-width:230px;padding:13px 18px;border-radius:8px;text-decoration:none;
+  font-weight:800;text-align:center;cursor:pointer;font-size:14px
+}
+#copy{display:none;border:1px solid #78b8d2;background:rgba(17,52,68,.88);color:#e9f9ff}
+.rsi{border:1px solid #e04a3d;background:rgba(84,15,11,.88);color:#fff}
+.steps{border-top:1px solid rgba(90,117,125,.5);margin-top:24px;padding-top:18px;line-height:1.6}
+.steps h2{font-size:18px;margin:0 0 7px}
+ol{padding-left:23px;margin:8px 0}
+.warning{text-align:center;color:#e6bd61;font-weight:700;margin-top:18px}
+footer{text-align:center;border-top:1px solid rgba(90,117,125,.5);margin-top:23px;padding-top:18px}
+footer img{width:65px}
+footer b{display:block;margin-top:4px;letter-spacing:.12em}
+footer span{display:block;color:#849ba2;font-size:11px;letter-spacing:.14em;margin-top:4px}
+@media(max-width:600px){
+ body{padding:8px;background-position:center top;background-attachment:scroll}
+ .content{padding:20px 14px 25px}
+ .brand img{width:118px;max-width:42vw}
+ .scratch{height:128px}
+ .btn{width:100%;min-width:0}
+ .treasure{letter-spacing:.23em}
+}
+</style>
+</head>
+<body>
+<main class="card">
+<div class="tricolore"></div>
+<div class="content">
+
+<header class="brand">
+  <img src="bia-logo.png" alt="Logo ufficiale =BIA= Beyond Interstellar Agency">
+  <h1>🏴‍☠️ PIRATE WEEK 2956</h1>
+  <div class="treasure">TREASURE HUNT</div>
+</header>
+
+<div class="reward">🎁 <b>Premio:</b> Golden Pirate Week 2956 Doubloon</div>
+
+<p class="hint">GRATTA CON IL MOUSE • SU SMARTPHONE USA IL DITO</p>
+
+<div class="scratch" id="scratch">
+  <div class="secret">
+    <small>CODICE DECRIPTATO</small>
+    <div id="code"></div>
+  </div>
+  <canvas id="cover"></canvas>
+</div>
+
+<div id="status">TRASMISSIONE CIFRATA — 0% DECODIFICATO</div>
+
+<div class="actions">
+  <button class="btn" id="copy" type="button">📋 COPIA CODICE</button>
+  <a class="btn rsi"
+     href="https://robertsspaceindustries.com/en/comm-link/transmission/21285-Pirate-Week-2026"
+     target="_blank" rel="noopener">↗ APRI PIRATE WEEK SU RSI</a>
+</div>
+
+<section class="steps">
+  <h2>Come riscattarlo</h2>
+  <ol>
+    <li>Gratta la zona dorata fino a rivelare il codice.</li>
+    <li>Premi <b>COPIA CODICE</b>.</li>
+    <li>Apri <b>PIRATE WEEK SU RSI</b>.</li>
+    <li>Accedi con il tuo account RSI e utilizza il codice nella procedura di riscatto indicata nella pagina.</li>
+  </ol>
+</section>
+
+<div class="warning">⚠️ Pirate Week termina il 28 settembre — riscattalo per tempo.</div>
+
+<footer>
+  <img src="bia-logo.png" alt="">
+  <b>=BIA=</b>
+  <span>BEYOND INTERSTELLAR AGENCY</span>
+</footer>
+
+</div>
+</main>
+
+<script>
+(() => {
+  const canvas = document.getElementById("cover");
+  const box = document.getElementById("scratch");
+  const ctx = canvas.getContext("2d", {willReadFrequently:true});
+  const status = document.getElementById("status");
+  const codeEl = document.getElementById("code");
+  const copy = document.getElementById("copy");
+
+  // Codice non presente in chiaro nel markup.
+  const packed=[55,45,65,81,52,50,45,48,56,50,57,45,52,53,54,55,45,49,53,45,82,68,70,69,52,53,56,55,45,51,50,52,45,76,54];
+  const secret=()=>packed.map(n=>String.fromCharCode(n)).join("");
+
+  let active=false,last=null,done=false,counter=0;
+
+  function init(){
+    const r=box.getBoundingClientRect();
+    const d=Math.max(1,window.devicePixelRatio||1);
+    canvas.width=Math.round(r.width*d);
+    canvas.height=Math.round(r.height*d);
+    canvas.style.width=r.width+"px";
+    canvas.style.height=r.height+"px";
+    ctx.setTransform(d,0,0,d,0,0);
+
+    const g=ctx.createLinearGradient(0,0,r.width,r.height);
+    g.addColorStop(0,"#725729");
+    g.addColorStop(.20,"#e3bd62");
+    g.addColorStop(.48,"#947039");
+    g.addColorStop(.76,"#d7a94f");
+    g.addColorStop(1,"#695027");
+    ctx.globalCompositeOperation="source-over";
+    ctx.fillStyle=g;
+    ctx.fillRect(0,0,r.width,r.height);
+
+    // Texture graffi
+    ctx.strokeStyle="rgba(65,42,10,.22)";
+    ctx.lineWidth=1;
+    for(let i=0;i<80;i++){
+      const y=(i*37)%r.height;
+      const x=(i*83)%r.width;
+      ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(Math.min(r.width,x+70),Math.max(0,y-18));ctx.stroke();
+    }
+
+    ctx.fillStyle="rgba(25,15,3,.67)";
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+    ctx.font="700 18px Arial";
+    ctx.fillText("☠  GRATTA PER RIVELARE  ☠",r.width/2,r.height/2);
+  }
+
+  function point(x,y){
+    const r=canvas.getBoundingClientRect();
+    return {x:x-r.left,y:y-r.top};
+  }
+
+  function erase(p){
+    ctx.globalCompositeOperation="destination-out";
+    ctx.lineCap="round";
+    ctx.lineJoin="round";
+    ctx.lineWidth=56;
+    if(last){
+      ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();
+    }else{
+      ctx.beginPath();ctx.arc(p.x,p.y,28,0,Math.PI*2);ctx.fill();
+    }
+    last=p;
+    if(++counter%7===0) measure();
+  }
+
+  function measure(){
+    if(done)return;
+    const data=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+    let clear=0,total=0;
+    for(let i=3;i<data.length;i+=200){total++;if(data[i]<40)clear++}
+    const pct=Math.min(100,Math.round(clear/total*100));
+    status.textContent="TRASMISSIONE CIFRATA — "+pct+"% DECODIFICATO";
+    if(pct>=58) reveal();
+  }
+
+  function reveal(){
+    done=true;
+    codeEl.textContent=secret();
+    canvas.style.transition="opacity .4s";
+    canvas.style.opacity="0";
+    canvas.style.pointerEvents="none";
+    status.textContent="✓ TRASMISSIONE DECODIFICATA";
+    copy.style.display="inline-block";
+  }
+
+  function start(x,y){active=true;last=null;erase(point(x,y))}
+  function move(x,y){if(active&&!done)erase(point(x,y))}
+  function end(){if(active){active=false;last=null;measure()}}
+
+  // Mouse
+  canvas.addEventListener("mousedown",e=>{e.preventDefault();start(e.clientX,e.clientY)});
+  window.addEventListener("mousemove",e=>{if(active){e.preventDefault();move(e.clientX,e.clientY)}});
+  window.addEventListener("mouseup",end);
+
+  // Touch iOS / Android
+  canvas.addEventListener("touchstart",e=>{
+    e.preventDefault();
+    const t=e.touches[0];
+    if(t)start(t.clientX,t.clientY);
+  },{passive:false});
+
+  canvas.addEventListener("touchmove",e=>{
+    e.preventDefault();
+    const t=e.touches[0];
+    if(t)move(t.clientX,t.clientY);
+  },{passive:false});
+
+  canvas.addEventListener("touchend",e=>{
+    e.preventDefault();
+    end();
+  },{passive:false});
+
+  copy.addEventListener("click",async()=>{
+    try{
+      await navigator.clipboard.writeText(secret());
+      copy.textContent="✓ CODICE COPIATO";
+    }catch(e){
+      const t=document.createElement("textarea");
+      t.value=secret();document.body.appendChild(t);t.select();
+      document.execCommand("copy");t.remove();
+      copy.textContent="✓ CODICE COPIATO";
+    }
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>
